@@ -1,0 +1,35 @@
+name: Wapiti DAST Scan
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+
+jobs:
+  wapiti_scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Wapiti
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wapiti
+
+      - name: Set Target URL from Secrets
+        run: echo "Running Wapiti scan on $TARGET_URL"
+        env:
+          TARGET_URL: ${{ secrets.ZAP_TARGET_URL }}
+
+      - name: Run Wapiti Scan
+        run: |
+          mkdir -p reports
+          wapiti -u ${{ secrets.ZAP_TARGET_URL }} -o reports/wapiti-report.html
+
+      - name: Upload Report as Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wapiti-report
+          path: reports/wapiti-report.html
